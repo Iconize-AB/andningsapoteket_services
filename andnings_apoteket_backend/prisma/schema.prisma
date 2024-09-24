@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                         Int       @id @default(autoincrement())
+  firstName                  String?   // Optional field
+  lastName                   String?   // Optional field
+  fullName                   String?    // Optional field
+  active                     Boolean
+  subscriptionType           String?
+  pushToken                  String?
+  resetCode                  String?
+  resetCodeExpiry            String?
+  password                   String
+  email                      String    @unique
+  phoneNumber                String?
+  verificationCode           String?
+  userCategories             UserCategory[]
+  batchesFollowed            Batch[]   @relation("FollowedUsers")
+  batchesFollowing           Batch[]   @relation("FollowingUsers")
+  viewedOnBoarding           String[]
+  profileId                  Int?      // Optional profileId
+  profile                    Profile?  // Optional relation
+  username                   String?    @unique
+  role                       String?
+  createdAt                  DateTime  @default(now())
+  savedSessionLists          SavedSessionList[]
+  diaryEntries               DiaryEntry[]
+  userVideoRatings           UserVideoRating[]
+  videoComments              VideoComment[]
+  breathworkLists            BreathworkList[]
+  eventTracking              EventTracking[]
+}
+
+model Profile {
+  id                         Int       @id @default(autoincrement())
+  pushNotifications          Boolean
+  emailNotifications         Boolean
+  acceptedTermsAndConditions Boolean
+  profileImageUrl            String?
+  ratingFunction             Boolean
+  userId                     Int       @unique
+  user                       User      @relation(fields: [userId], references: [id]) // Foreign key constraint on this side
+}
+
+
+model Batch {
+  id              Int      @id @default(autoincrement())
+  followingUserId Int
+  followedUserId  Int
+  name            String
+  color           String
+  createdAt       DateTime  @default(now())
+
+  followingUser   User      @relation("FollowingUsers", fields: [followingUserId], references: [id])
+  followedUser    User      @relation("FollowedUsers", fields: [followedUserId], references: [id])
+}
+
+model UserCategory {
+  id        Int      @id @default(autoincrement())
+  title     String
+  userId    Int
+  status    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model SavedSessionList {
+  id        Int      @id @default(autoincrement())
+  name      String
+  userId    Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model EventTracking {
+  id                    Int       @id @default(autoincrement())
+  userId                Int
+  deviceId              String
+  sessionId             String
+  timestamp             DateTime
+  deviceModel           String
+  location              String?
+  screenId              String
+  screenName            String
+  appVersion            String
+  playerAction          String?
+  contentId             String?
+  contentName           String?
+  contentType           String?
+  contentCategory       String?
+  listenedPercentage    String?
+  audioSessionId        String?
+  audioSessionTitle     String?
+  audioSessionType      String?
+  audioSessionPauseTime String?
+  previousScreen        String?
+  buttonName            String?
+  buttonId              String?
+  formId                String?
+  formName              String?
+  searchQuery           String?
+  resultsCount          Int?
+  reasonForExit         String?
+  source                String?
+  loginMethod           String?
+  subscriptionId        String?
+  planType              String?
+  price                 Float?
+  currency              String?
+  fieldsUpdated         String[]
+  createdAt             DateTime  @default(now())
+
+  user                  User      @relation(fields: [userId], references: [id])
+}
+
+model Video {
+  id          Int       @id @default(autoincrement())
+  category    String
+  title       String
+  description String
+  likes       Int       @default(0)
+  color       String?
+  url         String
+  createdAt   DateTime  @default(now())
+  comments    VideoComment[]
+  ratings     UserVideoRating[]
+  lists       BreathworkListsForVideo[]
+}
+
+model VideoComment {
+  id        Int      @id @default(autoincrement())
+  videoId   Int
+  userId    Int
+  comment   String
+  createdAt DateTime  @default(now())
+
+  video     Video     @relation(fields: [videoId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+model BreathworkList {
+  id              Int      @id @default(autoincrement())
+  name            String
+  userId          Int
+  runSessionCount Int      @default(0)
+  createdAt       DateTime  @default(now())
+
+  user            User      @relation(fields: [userId], references: [id])
+  videos          BreathworkListsForVideo[]
+}
+
+model BreathworkListsForVideo {
+  id              Int      @id @default(autoincrement())
+  trainingListId  Int
+  videoId         Int
+  createdAt       DateTime  @default(now())
+
+  trainingList    BreathworkList @relation(fields: [trainingListId], references: [id])
+  video           Video          @relation(fields: [videoId], references: [id])
+}
+
+model DiaryEntry {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  rating    Int
+  option    String?
+  userId    Int
+  createdAt DateTime  @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model UserVideoRating {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  videoId       Int
+  feelingBefore Int
+  feelingAfter  Int
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id])
+  video         Video    @relation(fields: [videoId], references: [id])
+}
+
