@@ -21,7 +21,7 @@ router.post("/signin", async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({
-      where: { email: email },
+      where: { email: email.toLowerCase() },
     });
     if (!user) return res.status(404).json({ error: "User not found." });
 
@@ -145,7 +145,7 @@ router.post("/verify-code", async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({
-      where: { email: email },
+      where: { email: email.toLowerCase() },
     });
 
     console.log('user', user);

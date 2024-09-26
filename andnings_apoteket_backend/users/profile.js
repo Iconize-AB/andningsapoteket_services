@@ -35,6 +35,7 @@ router.get("/fetch-profile", verifyToken, async (req, res) => {
     res.status(200).json({
       email: user.email,
       firstName: user.firstName,
+      id: user.id,
       lastName: user.lastName,
       fullName: user.fullName,
       active: user.active,
