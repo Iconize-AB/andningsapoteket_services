@@ -7,6 +7,7 @@ const twilio = require('twilio');
 const sgMail = require('@sendgrid/mail');
 require('dotenv').config();
 const verifyAppleToken = require('../authentication/verifyApple');
+const verifyToken = require('../authentication/verifyToken');
 
 
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
@@ -260,6 +261,117 @@ router.post('/register', async (req, res) => {
     return res.status(500).json({ error: 'User could not be created.' });
   }
 });
+
+router.delete("/delete-user", verifyToken, async (req, res) => {
+  const { userId } = req.body;
+  console.log('userId', userId);
+  
+  try {
+    const userIdParsed = parseInt(userId);
+
+    await prisma.batch.deleteMany({
+      where: {
+        OR: [
+          { followedUserId: userIdParsed },
+          { followingUserId: userIdParsed }
+        ]
+      },
+    });
+    console.log("Deleted related batches");
+
+    try {
+      await prisma.favoriteVideo.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted favoriteVideo");
+    } catch (error) {
+      console.log("No favorite videos to delete or error:", error);
+    }
+
+    try {
+      await prisma.userCategories.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted userCategories");
+    } catch (error) {
+      console.log("No user categories to delete or error:", error);
+    }
+
+    try {
+      await prisma.savedSessionList.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted savedSessionList");
+    } catch (error) {
+      console.log("No saved session lists to delete or error:", error);
+    }
+
+    try {
+      await prisma.diaryEntry.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted diaryEntry");
+    } catch (error) {
+      console.log("No diary entries to delete or error:", error);
+    }
+
+    try {
+      await prisma.userVideoRating.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted userVideoRating");
+    } catch (error) {
+      console.log("No video ratings to delete or error:", error);
+    }
+
+    try {
+      await prisma.videoComment.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted videoComment");
+    } catch (error) {
+      console.log("No video comments to delete or error:", error);
+    }
+
+    try {
+      await prisma.breathworkList.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted breathworkList");
+    } catch (error) {
+      console.log("No breathwork lists to delete or error:", error);
+    }
+
+    try {
+      await prisma.eventTracking.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted eventTracking");
+    } catch (error) {
+      console.log("No event tracking to delete or error:", error);
+    }
+
+    await prisma.profile.delete({
+      where: { userId: userIdParsed },
+    });
+    console.log("Deleted user profile");
+
+    const deletedUser = await prisma.user.delete({
+      where: { id: userIdParsed },
+    });
+
+    if (!deletedUser) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    res.status(200).json({ message: "User and all related data deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: "Failed to delete user." });
+  }
+});
+
+
 
 
 module.exports = router;
