@@ -124,7 +124,6 @@ model EventTracking {
   currency              String?
   fieldsUpdated         String[]
   createdAt             DateTime  @default(now())
-
   user                  User      @relation(fields: [userId], references: [id])
 }
 
@@ -140,7 +139,9 @@ model Video {
   comments    VideoComment[]
   ratings     UserVideoRating[]
   lists       BreathworkListsForVideo[]
+  categories  Json      // Array of strings representing what the video is good for
 }
+
 
 model VideoComment {
   id        Int      @id @default(autoincrement())

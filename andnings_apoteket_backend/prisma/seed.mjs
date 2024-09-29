@@ -4,44 +4,44 @@ const prisma = new PrismaClient();
 
 const videos = [
   {
-    title: "Shoulder flex",
+    title: "Release anger",
     url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    category: "Mobility",
-    description: "A mobility exercise for the shoulders.",
+    category: "Fire",
+    description: "To help manage feelings of irritation, frustration, or anger.",
     likes: 0,
-    color: "#FF5733", // Optional, adjust as needed
+    categories: ["Angry", "Stressed"],
   },
   {
-    title: "Leg raises",
+    title: "Fighting depressed",
     url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    category: "Core",
-    description: "Strengthen your core with leg raises.",
+    category: "Wind",
+    description: "For those feeling downhearted or sorrowful.",
     likes: 0,
-    color: "#33FF57", // Optional, adjust as needed
+    categories: ["Depressed", "Sad"],
   },
   {
-    title: "Chest pump",
+    title: "Anxious release",
     url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    category: "Strength",
-    description: "A powerful chest workout.",
+    category: "Water",
+    description: "For those feeling nervous, worried, or experiencing anxiety.",
     likes: 0,
-    color: "#3357FF", // Optional, adjust as needed
+    categories: ["Anxious", "Unfocused"],
   },
   {
-    title: "100 pull ups",
+    title: "Evening breathwork",
     url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    category: "Challenges",
-    description: "A challenging 100 pull-ups workout.",
+    category: "Earth",
+    description: "Aimed at individuals under mental or emotional pressure.",
     likes: 0,
-    color: "#FF33A1", // Optional, adjust as needed
+    categories: ["Tired", "Restless"],
   },
   {
-    title: "Special Bruce",
+    title: "Morning breathwork",
     url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    category: "Bruce Lee",
-    description: "Special workout inspired by Bruce Lee.",
+    category: "Fire",
+    description: "Designed for individuals feeling fatigued or lacking energy.",
     likes: 0,
-    color: "#A133FF", // Optional, adjust as needed
+    categories: ["Tired", "Stressed"],
   },
 ];
 

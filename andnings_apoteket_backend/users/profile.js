@@ -62,7 +62,6 @@ router.get("/fetch-profile", verifyToken, async (req, res) => {
 
 router.put("/update/user", verifyToken, async (req, res) => {
   const { fullName, email } = req.body;
-  console.log('user', fullName, email);
   try {
     // Retrieve the current user profile to compare emails
     const currentUser = await prisma.user.findUnique({
