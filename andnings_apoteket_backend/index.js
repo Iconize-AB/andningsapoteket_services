@@ -8,6 +8,7 @@ const profileRouter = require("./users/profile");
 const onboardingRouter = require("./users/onboarding");
 const settingsRouter = require("./users/settings");
 const breathworkRouter = require("./breathwork/breathwork");
+const playlistsRouter = require("./playlists/playlists");
 // const eventsRouter = require("./events/events");
 // const savedEntryListsRouter = require("./saved_entry_lists/saved_entry_lists");
 
@@ -15,6 +16,7 @@ app.use("/userRoute", userRouter);
 app.use("/breathworkRoute", breathworkRouter);
 app.use("/profileRoute", profileRouter);
 app.use("/settingsRoute", settingsRouter);
+app.use("/playlistsRoute", playlistsRouter);
 // app.use("/eventsRoute", eventsRouter);
 app.use("/onboardingRoute", onboardingRouter);
 // app.use("/savedEntryListsRoute", savedEntryListsRouter);
