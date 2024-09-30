@@ -39,26 +39,26 @@ router.get("/videos", verifyToken, async (req, res) => {
   }
 });
 
-router.get("/videos/by-feature", verifyToken, async (req, res) => {
+router.get("/videos/by-condition", verifyToken, async (req, res) => {
   try {
-    const { feature } = req.query;
+    const { condition } = req.query;
 
-    console.log('feature', feature);
-
-    if (!feature) {
-      return res.status(400).json({ error: "Feature is required." });
+    if (!condition) {
+      return res.status(400).json({ error: "Condition is required." });
     }
 
-    // Using raw SQL to check if the categories JSON array contains the feature
-    const videos = await prisma.$queryRaw`
-      SELECT * FROM "Video"
-      WHERE "categories"::jsonb ? ${feature}
-    `;
+    const videos = await prisma.video.findMany({
+      where: {
+        categories: {
+          array_contains: condition,
+        },
+      },
+    });
 
-    console.log('found videos by feature:', videos);
+    console.log('found videos by condition:', videos);
 
     if (!videos.length) {
-      return res.status(404).json({ error: "No videos found with the selected feature." });
+      return res.status(404).json({ error: "No videos found with the selected condition." });
     }
 
     res.status(200).json({
@@ -66,8 +66,8 @@ router.get("/videos/by-feature", verifyToken, async (req, res) => {
       total: videos.length,
     });
   } catch (error) {
-    console.error("Error fetching videos by feature:", error);
-    res.status(500).json({ error: "Failed to fetch videos by feature." });
+    console.error("Error fetching videos by condition:", error);
+    res.status(500).json({ error: "Failed to fetch videos by condition." });
   }
 });
 
