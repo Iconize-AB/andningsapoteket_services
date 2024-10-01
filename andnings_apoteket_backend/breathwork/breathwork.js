@@ -71,4 +71,32 @@ router.get("/videos/by-condition", verifyToken, async (req, res) => {
   }
 });
 
+router.get("/videos/most-watched", verifyToken, async (req, res) => {
+  try {
+    // Fetch the most-watched videos, counting the number of watch events per video
+    console.log('test');
+    const mostWatchedVideos = await prisma.video.findMany({
+      orderBy: {
+        watches: {
+          _count: "desc",
+        },
+      },
+      take: 5,
+      include: {
+        _count: {
+          select: { watches: true },
+        },
+      },
+    });
+
+    console.log('mostWatchedVideos', mostWatchedVideos);
+
+    res.status(200).json({ videos: mostWatchedVideos });
+  } catch (error) {
+    console.error("Error fetching most-watched videos:", error);
+    res.status(500).json({ error: "Failed to fetch most-watched videos." });
+  }
+});
+
+
 module.exports = router;

@@ -42,6 +42,7 @@ model User {
   videoComments              VideoComment[]
   breathworkLists            BreathworkList[]
   eventTracking              EventTracking[]
+  videoWatches               VideoWatch[]
 }
 
 model Profile {
@@ -140,8 +141,18 @@ model Video {
   ratings     UserVideoRating[]
   lists       BreathworkListsForVideo[]
   categories  Json      // Array of strings representing what the video is good for
+  watches     VideoWatch[]
 }
 
+model VideoWatch {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  videoId   Int
+  watchedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])  // User relation
+  video     Video    @relation(fields: [videoId], references: [id]) // Video relation
+}
 
 model VideoComment {
   id        Int      @id @default(autoincrement())
