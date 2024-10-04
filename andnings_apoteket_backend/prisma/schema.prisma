@@ -43,6 +43,7 @@ model User {
   breathworkLists            BreathworkList[]
   eventTracking              EventTracking[]
   videoWatches               VideoWatch[]
+  libraries                  Library[]
 }
 
 model Profile {
@@ -64,7 +65,6 @@ model Batch {
   name            String
   color           String
   createdAt       DateTime  @default(now())
-
   followingUser   User      @relation("FollowingUsers", fields: [followingUserId], references: [id])
   followedUser    User      @relation("FollowedUsers", fields: [followedUserId], references: [id])
 }
@@ -75,7 +75,6 @@ model UserCategory {
   userId    Int
   status    String
   createdAt DateTime @default(now())
-
   user      User     @relation(fields: [userId], references: [id])
 }
 
@@ -140,6 +139,7 @@ model Video {
   comments    VideoComment[]
   ratings     UserVideoRating[]
   lists       BreathworkListsForVideo[]
+  libraries   LibraryForVideo[]
   categories  Json      // Array of strings representing what the video is good for
   watches     VideoWatch[]
 }
@@ -149,7 +149,6 @@ model VideoWatch {
   userId    Int
   videoId   Int
   watchedAt DateTime @default(now())
-
   user      User     @relation(fields: [userId], references: [id])  // User relation
   video     Video    @relation(fields: [videoId], references: [id]) // Video relation
 }
@@ -160,7 +159,6 @@ model VideoComment {
   userId    Int
   comment   String
   createdAt DateTime  @default(now())
-
   video     Video     @relation(fields: [videoId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
 }
@@ -171,7 +169,6 @@ model BreathworkList {
   userId          Int
   runSessionCount Int      @default(0)
   createdAt       DateTime  @default(now())
-
   user            User      @relation(fields: [userId], references: [id])
   videos          BreathworkListsForVideo[]
 }
@@ -181,9 +178,25 @@ model BreathworkListsForVideo {
   trainingListId  Int
   videoId         Int
   createdAt       DateTime  @default(now())
-
   trainingList    BreathworkList @relation(fields: [trainingListId], references: [id])
   video           Video          @relation(fields: [videoId], references: [id])
+}
+
+model Library {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique  // Each user has one library
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  videos      LibraryForVideo[]  // Relation to videos
+}
+
+model LibraryForVideo {
+  id          Int       @id @default(autoincrement())
+  libraryId   Int
+  videoId     Int
+  createdAt   DateTime  @default(now())
+  library     Library   @relation(fields: [libraryId], references: [id])
+  video       Video     @relation(fields: [videoId], references: [id])
 }
 
 model DiaryEntry {
