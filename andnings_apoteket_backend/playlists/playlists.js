@@ -23,9 +23,7 @@ router.post("/lists/add-video", verifyToken, async (req, res) => {
         },
       });
       console.log("New list created:", list);
-    }
-
-    else if (listId) {
+    } else if (listId) {
       list = await prisma.breathworkList.findFirst({
         where: {
           id: listId,
@@ -34,18 +32,22 @@ router.post("/lists/add-video", verifyToken, async (req, res) => {
       });
 
       if (!list) {
-        return res.status(404).json({ error: "List not found or does not belong to the user." });
+        return res
+          .status(404)
+          .json({ error: "List not found or does not belong to the user." });
       }
       console.log("Using existing list:", list);
     }
 
     if (!list) {
-      return res.status(400).json({ error: "Either listName or listId must be provided." });
+      return res
+        .status(400)
+        .json({ error: "Either listName or listId must be provided." });
     }
 
     const videoInList = await prisma.breathworkListsForVideo.create({
       data: {
-        trainingListId: list.id,
+        listId: list.id,
         videoId: videoId,
       },
     });
@@ -62,34 +64,73 @@ router.post("/lists/add-video", verifyToken, async (req, res) => {
 });
 
 router.get("/fetch/lists", verifyToken, async (req, res) => {
-    const userId = req.user.userId;
-  
-    try {
-      const lists = await prisma.breathworkList.findMany({
-        where: {
-          userId: userId,
-        },
-        include: {
-          videos: {
-            include: {
-              video: true,
-            },
+  const userId = req.user.userId;
+
+  try {
+    const lists = await prisma.breathworkList.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        videos: {
+          include: {
+            video: true,
           },
         },
-      });
-  
-      if (!lists.length) {
-        return res.status(404).json({ message: "No lists found for this user." });
-      }
-  
-      res.status(200).json({
-        message: "User's lists and their videos fetched successfully",
-        lists,
-      });
-    } catch (error) {
-      console.error("Error fetching user's lists:", error);
-      res.status(500).json({ error: "Failed to fetch lists." });
+      },
+    });
+
+    res.status(200).json({
+      message: "User's lists and their videos fetched successfully",
+      lists,
+    });
+  } catch (error) {
+    console.error("Error fetching user's lists:", error);
+    res.status(500).json({ error: "Failed to fetch lists." });
+  }
+});
+
+router.delete("/lists/delete/:id", verifyToken, async (req, res) => {
+  const userId = req.user.userId;
+  const { id } = req.params;
+
+  try {
+    // Cast the id to an integer because Prisma expects it to be an Int
+    const playlistId = parseInt(id, 10);
+
+    // Check if the list exists and belongs to the user
+    const list = await prisma.breathworkList.findFirst({
+      where: {
+        id: playlistId, // Use the integer id
+        userId: userId, // Ensure that the playlist belongs to the user
+      },
+    });
+
+    if (!list) {
+      return res
+        .status(404)
+        .json({ error: "List not found or does not belong to the user." });
     }
-  });
+
+    // Delete the associated videos in the breathworkListsForVideo table
+    await prisma.breathworkListsForVideo.deleteMany({
+      where: {
+        listId: list.id,
+      },
+    });
+
+    // Delete the playlist
+    await prisma.breathworkList.delete({
+      where: {
+        id: list.id,
+      },
+    });
+
+    res.status(200).json({ message: "Playlist deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting playlist:", error);
+    res.status(500).json({ error: "Failed to delete playlist." });
+  }
+});
 
 module.exports = router;

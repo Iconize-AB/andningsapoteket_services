@@ -351,11 +351,56 @@ router.delete("/delete-user", verifyToken, async (req, res) => {
       console.log("No event tracking to delete or error:", error);
     }
 
-    await prisma.profile.delete({
-      where: { userId: userIdParsed },
-    });
-    console.log("Deleted user profile");
+    // Delete records from videoWatch table
+    try {
+      await prisma.videoWatch.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted videoWatch records");
+    } catch (error) {
+      console.log("No video watch records to delete or error:", error);
+    }
 
+    try {
+      await prisma.libraryForVideo.deleteMany({
+        where: {
+          library: {
+            userId: userIdParsed,
+          },
+        },
+      });
+      console.log("Deleted LibraryForVideo records");
+    } catch (error) {
+      console.log("No LibraryForVideo records to delete or error:", error);
+    }
+
+    // Delete records from Library table
+    try {
+      await prisma.library.delete({
+        where: {
+          userId: userIdParsed,
+        },
+      });
+      console.log("Deleted Library records");
+    } catch (error) {
+      console.log("No Library records to delete or error:", error);
+    }
+
+    // Delete the user profile
+    try {
+      await prisma.profile.delete({
+        where: { userId: userIdParsed },
+      });
+      console.log("Deleted user profile");
+    } catch (error) {
+      if (error.code === 'P2025') {
+        console.log("Profile not found, skipping deletion");
+      } else {
+        console.log("Error deleting profile:", error);
+      }
+    }
+
+    // Finally delete the user
     const deletedUser = await prisma.user.delete({
       where: { id: userIdParsed },
     });
@@ -370,8 +415,6 @@ router.delete("/delete-user", verifyToken, async (req, res) => {
     res.status(500).json({ error: "Failed to delete user." });
   }
 });
-
-
 
 
 module.exports = router;
