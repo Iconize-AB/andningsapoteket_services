@@ -67,12 +67,6 @@ router.get("/library", verifyToken, async (req, res) => {
       },
     });
 
-    if (!library || !library.videos.length) {
-      return res
-        .status(404)
-        .json({ message: "No videos found in the library." });
-    }
-
     res.status(200).json({
       message: "Library and videos fetched successfully",
       library,
