@@ -40,6 +40,7 @@ router.get("/fetch-profile", verifyToken, async (req, res) => {
       fullName: user.fullName,
       active: user.active,
       subscriptionType: user.subscriptionType,
+      language: user.language,
       phoneNumber: user.phoneNumber,
       role: user.role,
       userCategories: user.userCategories,

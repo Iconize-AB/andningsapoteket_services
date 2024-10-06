@@ -25,6 +25,7 @@ model User {
   resetCodeExpiry            String?
   password                   String
   email                      String    @unique
+  language                   String?
   phoneNumber                String?
   verificationCode           String?
   userCategories             UserCategory[]
