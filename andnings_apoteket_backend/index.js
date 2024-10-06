@@ -10,6 +10,7 @@ const settingsRouter = require("./users/settings");
 const breathworkRouter = require("./breathwork/breathwork");
 const playlistsRouter = require("./playlists/playlists");
 const libraryRouter = require("./library/library");
+const supportRouter = require("./support/support");
 const eventsRouter = require("./events/events");
 
 app.use("/userRoute", userRouter);
@@ -18,6 +19,7 @@ app.use("/profileRoute", profileRouter);
 app.use("/settingsRoute", settingsRouter);
 app.use("/playlistsRoute", playlistsRouter);
 app.use("/libraryRoute", libraryRouter);
+app.use("/supportRoute", supportRouter);
 app.use("/eventsRoute", eventsRouter);
 app.use("/onboardingRoute", onboardingRouter);
 
