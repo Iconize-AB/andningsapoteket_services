@@ -4,7 +4,7 @@ const router = require("express").Router();
 const verifyToken = require("../authentication/verifyToken");
 
 // Endpoint to add a video to the user's library
-router.post("/library/add-video", verifyToken, async (req, res) => {
+router.post("/add-video", verifyToken, async (req, res) => {
   const { videoId } = req.body;
   const userId = req.user.userId;
 
@@ -49,7 +49,7 @@ router.post("/library/add-video", verifyToken, async (req, res) => {
   }
 });
 
-router.get("/library", verifyToken, async (req, res) => {
+router.get("/fetch", verifyToken, async (req, res) => {
   const userId = req.user.userId;
 
   try {
@@ -78,7 +78,7 @@ router.get("/library", verifyToken, async (req, res) => {
 });
 
 // Endpoint to delete selected videos from the user's library
-router.delete("/library/delete", verifyToken, async (req, res) => {
+router.delete("/delete", verifyToken, async (req, res) => {
   const { sessionIds } = req.body;
   const userId = req.user.userId;
 

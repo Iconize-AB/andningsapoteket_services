@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 const router = require("express").Router();
 const verifyToken = require("../authentication/verifyToken");
 
-router.get("/videos", verifyToken, async (req, res) => {
+router.get("/recordings", verifyToken, async (req, res) => {
   console.log("category", req.query);
   try {
     const { category } = req.query;
@@ -39,7 +39,7 @@ router.get("/videos", verifyToken, async (req, res) => {
   }
 });
 
-router.get("/videos/by-condition", verifyToken, async (req, res) => {
+router.get("/recordings/by-condition", verifyToken, async (req, res) => {
   try {
     const { condition } = req.query;
 
@@ -71,7 +71,7 @@ router.get("/videos/by-condition", verifyToken, async (req, res) => {
   }
 });
 
-router.get("/videos/most-watched", verifyToken, async (req, res) => {
+router.get("/most-watched", verifyToken, async (req, res) => {
   try {
     // Fetch the most-watched videos, counting the number of watch events per video
     console.log('test');
@@ -89,8 +89,6 @@ router.get("/videos/most-watched", verifyToken, async (req, res) => {
       },
     });
 
-    console.log('mostWatchedVideos', mostWatchedVideos);
-
     res.status(200).json({ videos: mostWatchedVideos });
   } catch (error) {
     console.error("Error fetching most-watched videos:", error);
@@ -98,5 +96,37 @@ router.get("/videos/most-watched", verifyToken, async (req, res) => {
   }
 });
 
+router.get('/unwatched-videos', verifyToken, async (req, res) => {
+  const { userId } = req.user;
+
+  try {
+    const allVideos = await prisma.video.findMany({
+      select: { id: true },
+    });
+
+    const watchedVideos = await prisma.videoWatch.findMany({
+      where: { userId: userId },
+      select: { videoId: true },
+    });
+
+    const allVideoIds = allVideos.map(video => video.id);
+    const watchedVideoIds = watchedVideos.map(watch => watch.videoId);
+
+    const unwatchedVideoIds = allVideoIds.filter(id => !watchedVideoIds.includes(id));
+
+    const unwatchedVideos = await prisma.video.findMany({
+      where: {
+        id: { in: unwatchedVideoIds }
+      }
+    });
+
+    res.status(200).json({
+      items: unwatchedVideos,
+    });
+  } catch (error) {
+    console.error("Error fetching unwatched videos:", error);
+    res.status(500).json({ error: "Failed to fetch unwatched videos." });
+  }
+});
 
 module.exports = router;

@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 const router = require("express").Router();
 const verifyToken = require("../authentication/verifyToken");
 
-router.post("/lists/add-video", verifyToken, async (req, res) => {
+router.post("/add-video", verifyToken, async (req, res) => {
   const { listId, listName, videoId } = req.body;
   const userId = req.user.userId;
   console.log("Newlist:", listId, listName, videoId, userId);
@@ -47,7 +47,7 @@ router.post("/lists/add-video", verifyToken, async (req, res) => {
 
     const videoInList = await prisma.breathworkListsForVideo.create({
       data: {
-        listId: list.id,
+        trainingListId: list.id,
         videoId: videoId,
       },
     });
@@ -63,7 +63,7 @@ router.post("/lists/add-video", verifyToken, async (req, res) => {
   }
 });
 
-router.get("/fetch/lists", verifyToken, async (req, res) => {
+router.get("/fetch", verifyToken, async (req, res) => {
   const userId = req.user.userId;
 
   try {
@@ -90,7 +90,7 @@ router.get("/fetch/lists", verifyToken, async (req, res) => {
   }
 });
 
-router.delete("/lists/delete/:id", verifyToken, async (req, res) => {
+router.delete("/delete/:id", verifyToken, async (req, res) => {
   const userId = req.user.userId;
   const { id } = req.params;
 
@@ -115,7 +115,7 @@ router.delete("/lists/delete/:id", verifyToken, async (req, res) => {
     // Delete the associated videos in the breathworkListsForVideo table
     await prisma.breathworkListsForVideo.deleteMany({
       where: {
-        listId: list.id,
+        trainingListId: list.id,
       },
     });
 
