@@ -6,9 +6,12 @@ const verifyToken = require("../authentication/verifyToken");
 
 router.get("/fetch-profile", verifyToken, async (req, res) => {
   try {
-    const user = await prisma.user.findUnique({
+    const updatedUser = await prisma.user.update({
       where: {
         id: req.user.userId,
+      },
+      data: {
+        lastActive: new Date(),
       },
       include: {
         profile: true,
@@ -30,29 +33,28 @@ router.get("/fetch-profile", verifyToken, async (req, res) => {
       },
     });
 
-    if (!user) return res.status(404).json({ error: "User not found." });
+    if (!updatedUser) return res.status(404).json({ error: "User not found." });
 
     res.status(200).json({
-      email: user.email,
-      firstName: user.firstName,
-      id: user.id,
-      lastName: user.lastName,
-      fullName: user.fullName,
-      active: user.active,
-      subscriptionType: user.subscriptionType,
-      language: user.language,
-      phoneNumber: user.phoneNumber,
-      role: user.role,
-      userCategories: user.userCategories,
-      batchesFollowingCount: user.batchesFollowing.length,
-      savedSessionCount: user.savedSessionLists.length,
-
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      id: updatedUser.id,
+      lastName: updatedUser.lastName,
+      fullName: updatedUser.fullName,
+      lastActive: updatedUser.lastActive,
+      subscriptionType: updatedUser.subscriptionType,
+      language: updatedUser.language,
+      phoneNumber: updatedUser.phoneNumber,
+      role: updatedUser.role,
+      userCategories: updatedUser.userCategories,
+      batchesFollowingCount: updatedUser.batchesFollowing.length,
+      savedSessionCount: updatedUser.savedSessionLists.length,
       profile: {
-        pushNotifications: user.profile?.pushNotifications,
-        emailNotifications: user.profile?.emailNotifications,
-        acceptedTermsAndConditions: user.profile?.acceptedTermsAndConditions,
-        profileImageUrl: user.profile?.profileImageUrl,
-        ratingFunction: user.profile?.ratingFunction,
+        pushNotifications: updatedUser.profile?.pushNotifications,
+        emailNotifications: updatedUser.profile?.emailNotifications,
+        acceptedTermsAndConditions: updatedUser.profile?.acceptedTermsAndConditions,
+        profileImageUrl: updatedUser.profile?.profileImageUrl,
+        ratingFunction: updatedUser.profile?.ratingFunction,
       },
     });
   } catch (error) {

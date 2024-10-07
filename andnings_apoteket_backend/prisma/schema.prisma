@@ -45,6 +45,7 @@ model User {
   eventTracking              EventTracking[]
   videoWatches               VideoWatch[]
   libraries                  Library[]
+  lastActive                 DateTime?  @updatedAt
 }
 
 model Profile {
