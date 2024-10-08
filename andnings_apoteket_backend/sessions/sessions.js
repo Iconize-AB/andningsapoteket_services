@@ -19,8 +19,6 @@ router.get("/recordings", verifyToken, async (req, res) => {
       },
     });
 
-    console.log("videos", videos);
-
     // If no videos are found, return an empty array
     if (!videos.length) {
       return res

@@ -38,42 +38,54 @@ router.post("/add-video", verifyToken, async (req, res) => {
       },
     });
 
-    res.status(200).json({
-      message: "Video added to library successfully",
-      library,
-      videoInLibrary,
-    });
-  } catch (error) {
-    console.error("Error adding video to library:", error);
-    res.status(500).json({ error: "Failed to add video to library." });
-  }
-});
-
-router.get("/fetch", verifyToken, async (req, res) => {
-  const userId = req.user.userId;
-
-  try {
-    // Fetch the user's library with all associated videos
-    const library = await prisma.library.findUnique({
+    // Check if the user already liked this video
+    const existingLike = await prisma.videoLike.findUnique({
       where: {
-        userId: userId,
-      },
-      include: {
-        videos: {
-          include: {
-            video: true, // Include the full video details
-          },
+        videoId_userId: {
+          videoId: videoId,
+          userId: userId,
         },
       },
     });
 
+    // If the user hasn't liked the video yet, create a like and increment the counter
+    if (!existingLike) {
+      await prisma.videoLike.create({
+        data: {
+          userId: userId,
+          videoId: videoId,
+        },
+      });
+
+      // Increment the total like count on the video
+      await prisma.video.update({
+        where: {
+          id: videoId,
+        },
+        data: {
+          likes: {
+            increment: 1,
+          },
+        },
+      });
+    }
+
+    // Fetch the updated count of how many times this video has been added to libraries (likes)
+    const likeCount = await prisma.libraryForVideo.count({
+      where: {
+        videoId: videoId,
+      },
+    });
+
     res.status(200).json({
-      message: "Library and videos fetched successfully",
+      message: "Video added to library and liked successfully",
       library,
+      videoInLibrary,
+      likeCount, // Return the count of how many times the video has been added to libraries
     });
   } catch (error) {
-    console.error("Error fetching library:", error);
-    res.status(500).json({ error: "Failed to fetch library." });
+    console.error("Error adding video to library and liking it:", error);
+    res.status(500).json({ error: "Failed to add video to library and like." });
   }
 });
 
