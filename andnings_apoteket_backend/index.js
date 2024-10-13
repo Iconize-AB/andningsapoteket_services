@@ -1,5 +1,14 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: 'http://localhost:3001',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true 
+}));
 
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
@@ -9,6 +18,7 @@ const profileRouter = require("./users/profile");
 const onboardingRouter = require("./users/onboarding");
 const settingsRouter = require("./users/settings");
 const breathworkRouter = require("./sessions/sessions");
+const statisticsRouter = require("./statistics/statistics");
 const playlistsRouter = require("./playlists/playlists");
 const libraryRouter = require("./library/library");
 const supportRouter = require("./support/support");
@@ -24,6 +34,7 @@ app.use("/v1/library", libraryRouter);
 app.use("/v1/support", supportRouter);
 app.use("/v1/events", eventsRouter);
 app.use("/v1/onboarding", onboardingRouter);
+app.use("/v1/statistics", statisticsRouter);
 
 app.get('/v1', (req, res) => {
   res.send('Hello, Andningsapoteket v1!');

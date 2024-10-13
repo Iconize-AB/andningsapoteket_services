@@ -62,7 +62,7 @@ router.delete("/favorites/delete", verifyToken, async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "List and its videos deleted successfully" });
+      .json({ message: "List and its sessions deleted successfully" });
   } catch (error) {
     console.error("Failed to delete list:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -70,7 +70,7 @@ router.delete("/favorites/delete", verifyToken, async (req, res) => {
 });
 
 router.post("/favorites/add-breathwork", verifyToken, async (req, res) => {
-  const { videoId, listId } = req.body;
+  const { sessionId, listId } = req.body;
   const userId = req.user.userId;
 
   try {
@@ -88,65 +88,65 @@ router.post("/favorites/add-breathwork", verifyToken, async (req, res) => {
         .json({ message: "List not found or not accessible by you." });
     }
 
-    // Check if the video exists
-    const video = await prisma.video.findUnique({
-      where: { id: videoId },
+    // Check if the session exists
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
     });
 
-    if (!video) {
-      return res.status(404).json({ message: "Video not found" });
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
     }
 
     await prisma.$transaction([
       prisma.trainingList.update({
         where: { id: listId },
         data: {
-          Videos: {
-            connect: { id: videoId },
+          Sessions: {
+            connect: { id: sessionId },
           },
         },
       }),
-      prisma.video.update({
-        where: { id: videoId },
+      prisma.session.update({
+        where: { id: sessionId },
         data: {
           savedNumberOfTimes: { increment: 1 },
         },
       }),
     ]);
 
-    res.status(201).json({ message: "Video added to list successfully" });
+    res.status(201).json({ message: "Session added to list successfully" });
   } catch (error) {
-    console.error("Failed to add video to list:", error);
+    console.error("Failed to add session to list:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.post("/favorites", verifyToken, async (req, res) => {
-  const { videoId } = req.body;
+  const { sessionId } = req.body;
   const userId = req.user.userId;
 
   try {
-    const existingFavorite = await prisma.favoriteVideo.findUnique({
+    const existingFavorite = await prisma.favoriteSession.findUnique({
       where: {
-        userId_videoId: {
+        userId_sessionId: {
           userId: userId,
-          videoId: videoId,
+          sessionId: sessionId,
         },
       },
     });
 
     if (existingFavorite) {
-      await prisma.favoriteVideo.delete({
+      await prisma.favoriteSession.delete({
         where: {
           id: existingFavorite.id,
         },
       });
       res.status(200).json({ message: "Favorite removed." });
     } else {
-      const newFavorite = await prisma.favoriteVideo.create({
+      const newFavorite = await prisma.favoriteSession.create({
         data: {
           userId: userId,
-          videoId: videoId,
+          sessionId: sessionId,
         },
       });
       res
@@ -162,12 +162,12 @@ router.post("/favorites", verifyToken, async (req, res) => {
 router.get("/user/all/favorites", verifyToken, async (req, res) => {
   const userId = req.user.userId;
   try {
-    const favorites = await prisma.favoriteVideo.findMany({
+    const favorites = await prisma.favoriteSession.findMany({
       where: {
         userId: userId,
       },
       include: {
-        video: {
+        session: {
           include: {
             likes: {
               where: {
@@ -182,17 +182,17 @@ router.get("/user/all/favorites", verifyToken, async (req, res) => {
       },
     });
 
-    const favoriteVideos = favorites.map((favorite) => {
+    const favoriteSessions = favorites.map((favorite) => {
       return {
-        ...favorite.video,
-        likedByUser: favorite.video.likes.length > 0,
+        ...favorite.session,
+        likedByUser: favorite.session.likes.length > 0,
       };
     });
 
-    res.status(200).json(favoriteVideos);
+    res.status(200).json(favoriteSessions);
   } catch (error) {
-    console.error("Error fetching favorite videos:", error);
-    res.status(500).json({ error: "Failed to fetch favorite videos." });
+    console.error("Error fetching favorite sessions:", error);
+    res.status(500).json({ error: "Failed to fetch favorite sessions." });
   }
 });
 

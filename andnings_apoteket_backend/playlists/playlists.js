@@ -4,12 +4,11 @@ const router = require("express").Router();
 const verifyToken = require("../authentication/verifyToken");
 
 router.post("/add-video", verifyToken, async (req, res) => {
-  const { listId, listName, videoId } = req.body;
+  const { listId, listName, sessionId } = req.body;
   const userId = req.user.userId;
-  console.log("Newlist:", listId, listName, videoId, userId);
 
-  if (!videoId) {
-    return res.status(400).json({ error: "Video ID is required." });
+  if (!sessionId) {
+    return res.status(400).json({ error: "Session ID is required." });
   }
 
   try {
@@ -45,21 +44,21 @@ router.post("/add-video", verifyToken, async (req, res) => {
         .json({ error: "Either listName or listId must be provided." });
     }
 
-    const videoInList = await prisma.breathworkListsForVideo.create({
+    const sessionInList = await prisma.breathworkListsForSession.create({
       data: {
         trainingListId: list.id,
-        videoId: videoId,
+        sessionId: sessionId,
       },
     });
 
     res.status(200).json({
-      message: "Video added to list successfully",
+      message: "Session added to list successfully",
       list,
-      videoInList,
+      sessionInList,
     });
   } catch (error) {
-    console.error("Error adding video to list:", error);
-    res.status(500).json({ error: "Failed to add video to list." });
+    console.error("Error adding session to list:", error);
+    res.status(500).json({ error: "Failed to add session to list." });
   }
 });
 
@@ -72,16 +71,16 @@ router.get("/fetch", verifyToken, async (req, res) => {
         userId: userId,
       },
       include: {
-        videos: {
+        sessions: {
           include: {
-            video: true,
+            session: true,
           },
         },
       },
     });
 
     res.status(200).json({
-      message: "User's lists and their videos fetched successfully",
+      message: "User's lists and their sessions fetched successfully",
       lists,
     });
   } catch (error) {
@@ -112,8 +111,8 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
         .json({ error: "List not found or does not belong to the user." });
     }
 
-    // Delete the associated videos in the breathworkListsForVideo table
-    await prisma.breathworkListsForVideo.deleteMany({
+    // Delete the associated sessions in the breathworkListsForVideo table
+    await prisma.breathworkListsForSession.deleteMany({
       where: {
         trainingListId: list.id,
       },

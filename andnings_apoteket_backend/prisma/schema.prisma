@@ -17,7 +17,7 @@ model User {
   id                         Int       @id @default(autoincrement())
   firstName                  String?   // Optional field
   lastName                   String?   // Optional field
-  fullName                   String?    // Optional field
+  fullName                   String?   // Optional field
   active                     Boolean
   subscriptionType           String?
   pushToken                  String?
@@ -34,19 +34,19 @@ model User {
   viewedOnBoarding           String[]
   profileId                  Int?      // Optional profileId
   profile                    Profile?  // Optional relation
-  username                   String?    @unique
+  username                   String?   @unique
   role                       String?
   createdAt                  DateTime  @default(now())
   savedSessionLists          SavedSessionList[]
   diaryEntries               DiaryEntry[]
-  userVideoRatings           UserVideoRating[]
-  videoComments              VideoComment[]
+  userSessionRatings         UserSessionRating[] // Updated
+  sessionComments            SessionComment[] // Updated
   breathworkLists            BreathworkList[]
   eventTracking              EventTracking[]
-  videoWatches               VideoWatch[]
+  sessionWatches             SessionWatch[] // Updated
   libraries                  Library[]
   lastActive                 DateTime?  @updatedAt
-  videoLikes                 VideoLike[]
+  sessionLikes               SessionLike[] // Updated
 }
 
 model Profile {
@@ -59,7 +59,6 @@ model Profile {
   userId                     Int       @unique
   user                       User      @relation(fields: [userId], references: [id]) // Foreign key constraint on this side
 }
-
 
 model Batch {
   id              Int      @id @default(autoincrement())
@@ -86,7 +85,6 @@ model SavedSessionList {
   name      String
   userId    Int
   createdAt DateTime @default(now())
-
   user      User     @relation(fields: [userId], references: [id])
 }
 
@@ -130,8 +128,8 @@ model EventTracking {
   user                  User      @relation(fields: [userId], references: [id])
 }
 
-model Video {
-  id          Int       @id @default(autoincrement())
+model Session {
+  id          Int       @id @default(autoincrement())  // Updated
   category    String
   title       String
   description String
@@ -139,41 +137,41 @@ model Video {
   color       String?
   url         String
   createdAt   DateTime  @default(now())
-  comments    VideoComment[]
-  ratings     UserVideoRating[]
-  lists       BreathworkListsForVideo[]
-  libraries   LibraryForVideo[]
-  categories  Json      // Array of strings representing what the video is good for
-  watches     VideoWatch[]
-  userLikes   VideoLike[]  // Rename relation for users who liked this video
+  comments    SessionComment[]  // Updated
+  ratings     UserSessionRating[]  // Updated
+  lists       BreathworkListsForSession[]  // Updated
+  libraries   LibraryForSession[]  // Updated
+  categories  Json      // Array of strings representing what the session is good for
+  watches     SessionWatch[]  // Updated
+  userLikes   SessionLike[]  // Updated
 }
 
-model VideoLike {
-  id        Int    @id @default(autoincrement())
-  videoId   Int
+model SessionLike {
+  id        Int    @id @default(autoincrement())  // Updated
+  sessionId Int
   userId    Int
   createdAt DateTime @default(now())
-  video     Video   @relation(fields: [videoId], references: [id])
+  session   Session   @relation(fields: [sessionId], references: [id])  // Updated
   user      User    @relation(fields: [userId], references: [id])
-  @@unique([videoId, userId])  // Ensure a user can like a video only once
+  @@unique([sessionId, userId])  // Ensure a user can like a session only once
 }
 
-model VideoWatch {
-  id        Int      @id @default(autoincrement())
+model SessionWatch {
+  id        Int      @id @default(autoincrement())  // Updated
   userId    Int
-  videoId   Int
+  sessionId Int
   watchedAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])  // User relation
-  video     Video    @relation(fields: [videoId], references: [id]) // Video relation
+  session   Session  @relation(fields: [sessionId], references: [id])  // Updated
 }
 
-model VideoComment {
-  id        Int      @id @default(autoincrement())
-  videoId   Int
+model SessionComment {
+  id        Int      @id @default(autoincrement())  // Updated
+  sessionId Int
   userId    Int
   comment   String
   createdAt DateTime  @default(now())
-  video     Video     @relation(fields: [videoId], references: [id])
+  session   Session  @relation(fields: [sessionId], references: [id])  // Updated
   user      User      @relation(fields: [userId], references: [id])
 }
 
@@ -184,16 +182,16 @@ model BreathworkList {
   runSessionCount Int      @default(0)
   createdAt       DateTime  @default(now())
   user            User      @relation(fields: [userId], references: [id])
-  videos          BreathworkListsForVideo[]
+  sessions        BreathworkListsForSession[]  // Updated
 }
 
-model BreathworkListsForVideo {
-  id              Int      @id @default(autoincrement())
+model BreathworkListsForSession {
+  id              Int      @id @default(autoincrement())  // Updated
   trainingListId  Int
-  videoId         Int
+  sessionId       Int
   createdAt       DateTime  @default(now())
   trainingList    BreathworkList @relation(fields: [trainingListId], references: [id])
-  video           Video          @relation(fields: [videoId], references: [id])
+  session         Session   @relation(fields: [sessionId], references: [id])  // Updated
 }
 
 model Library {
@@ -201,16 +199,16 @@ model Library {
   userId      Int       @unique  // Each user has one library
   createdAt   DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id])
-  videos      LibraryForVideo[]  // Relation to videos
+  sessions    LibraryForSession[]  // Updated
 }
 
-model LibraryForVideo {
+model LibraryForSession {  // Updated
   id          Int       @id @default(autoincrement())
   libraryId   Int
-  videoId     Int
+  sessionId   Int
   createdAt   DateTime  @default(now())
   library     Library   @relation(fields: [libraryId], references: [id])
-  video       Video     @relation(fields: [videoId], references: [id])
+  session     Session   @relation(fields: [sessionId], references: [id])  // Updated
 }
 
 model DiaryEntry {
@@ -221,19 +219,40 @@ model DiaryEntry {
   option    String?
   userId    Int
   createdAt DateTime  @default(now())
-
   user      User     @relation(fields: [userId], references: [id])
 }
 
-model UserVideoRating {
+model UserSessionRating {  // Updated
   id            Int      @id @default(autoincrement())
   userId        Int
-  videoId       Int
+  sessionId     Int
   feelingBefore Int
   feelingAfter  Int
   createdAt     DateTime @default(now())
-
   user          User     @relation(fields: [userId], references: [id])
-  video         Video    @relation(fields: [videoId], references: [id])
+  session       Session   @relation(fields: [sessionId], references: [id])  // Updated
 }
 
+model SixDayChallenge {
+  id          Int                @id @default(autoincrement())
+  title       String
+  description String             @db.Text
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  sessions    ChallengeSession[]
+}
+
+model ChallengeSession {
+  id          Int             @id @default(autoincrement())
+  title       String
+  description String          @db.Text
+  longDescription String      @db.Text
+  sessionUrl    String
+  audioUrl    String?
+  duration    Int
+  day         Int
+  challenge   SixDayChallenge @relation(fields: [challengeId], references: [id])
+  challengeId Int
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}

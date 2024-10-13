@@ -4,26 +4,26 @@ const router = require("express").Router();
 const verifyToken = require("../authentication/verifyToken");
 
 router.post("/session/watch", verifyToken, async (req, res) => {
-  const { videoId } = req.body;
+  const { sessionId } = req.body;
   const userId = req.user.userId;
 
-  if (!videoId) {
-    return res.status(400).json({ error: "Video ID is required." });
+  if (!sessionId) {
+    return res.status(400).json({ error: "Session ID is required." });
   }
 
   try {
     // Create a new watch event
-    await prisma.videoWatch.create({
+    await prisma.sessionWatch.create({
       data: {
         userId: userId,
-        videoId: videoId,
+        sessionId: sessionId,
       },
     });
 
-    // Fetch the total number of times the video has been watched
-    const watchCount = await prisma.videoWatch.count({
+    // Fetch the total number of times the session has been watched
+    const watchCount = await prisma.sessionWatch.count({
       where: {
-        videoId: videoId,
+        sessionId: sessionId,
       },
     });
 

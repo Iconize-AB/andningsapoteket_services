@@ -280,12 +280,12 @@ router.delete("/delete-user", verifyToken, async (req, res) => {
     console.log("Deleted related batches");
 
     try {
-      await prisma.favoriteVideo.deleteMany({
+      await prisma.favoriteSession.deleteMany({
         where: { userId: userIdParsed },
       });
-      console.log("Deleted favoriteVideo");
+      console.log("Deleted favoriteSession");
     } catch (error) {
-      console.log("No favorite videos to delete or error:", error);
+      console.log("No favorite sessions to delete or error:", error);
     }
 
     try {
@@ -316,21 +316,21 @@ router.delete("/delete-user", verifyToken, async (req, res) => {
     }
 
     try {
-      await prisma.userVideoRating.deleteMany({
+      await prisma.userSessionRating.deleteMany({
         where: { userId: userIdParsed },
       });
-      console.log("Deleted userVideoRating");
+      console.log("Deleted userSessionRating");
     } catch (error) {
-      console.log("No video ratings to delete or error:", error);
+      console.log("No session ratings to delete or error:", error);
     }
 
     try {
-      await prisma.videoComment.deleteMany({
+      await prisma.sessionComment.deleteMany({
         where: { userId: userIdParsed },
       });
-      console.log("Deleted videoComment");
+      console.log("Deleted sessionComment");
     } catch (error) {
-      console.log("No video comments to delete or error:", error);
+      console.log("No session comments to delete or error:", error);
     }
 
     try {
@@ -351,27 +351,27 @@ router.delete("/delete-user", verifyToken, async (req, res) => {
       console.log("No event tracking to delete or error:", error);
     }
 
-    // Delete records from videoWatch table
+    // Delete records from sessionWatch table
     try {
-      await prisma.videoWatch.deleteMany({
+      await prisma.sessionWatch.deleteMany({
         where: { userId: userIdParsed },
       });
-      console.log("Deleted videoWatch records");
+      console.log("Deleted sessionWatch records");
     } catch (error) {
-      console.log("No video watch records to delete or error:", error);
+      console.log("No session watch records to delete or error:", error);
     }
 
     try {
-      await prisma.libraryForVideo.deleteMany({
+      await prisma.libraryForSession.deleteMany({
         where: {
           library: {
             userId: userIdParsed,
           },
         },
       });
-      console.log("Deleted LibraryForVideo records");
+      console.log("Deleted libraryForSession records");
     } catch (error) {
-      console.log("No LibraryForVideo records to delete or error:", error);
+      console.log("No libraryForSession records to delete or error:", error);
     }
 
     // Delete records from Library table
@@ -416,5 +416,44 @@ router.delete("/delete-user", verifyToken, async (req, res) => {
   }
 });
 
+router.get('/all', verifyToken, async (req, res) => {
+  try {    
+    // Fetch the full user details from the database
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { role: true }
+    });
+
+    if (!user || user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+    }
+
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        fullName: true,
+        active: true,
+        subscriptionType: true,
+        language: true,
+        phoneNumber: true,
+        lastActive: true,
+      },
+    });
+
+    res.status(200).json({
+      message: 'Users fetched successfully',
+      users: users,
+      total: users.length,
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users.' });
+  }
+});
 
 module.exports = router;
