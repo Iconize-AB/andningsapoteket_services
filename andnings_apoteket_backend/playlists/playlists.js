@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 const router = require("express").Router();
 const verifyToken = require("../authentication/verifyToken");
 
-router.post("/add-video", verifyToken, async (req, res) => {
+router.post("/add-session", verifyToken, async (req, res) => {
   const { listId, listName, sessionId } = req.body;
   const userId = req.user.userId;
 

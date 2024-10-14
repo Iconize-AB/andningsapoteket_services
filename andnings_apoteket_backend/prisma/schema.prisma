@@ -136,6 +136,8 @@ model Session {
   likes       Int       @default(0)  // Keep this to count total likes
   color       String?
   url         String
+  duration    Float?
+  imageUrl    String?
   createdAt   DateTime  @default(now())
   comments    SessionComment[]  // Updated
   ratings     UserSessionRating[]  // Updated
