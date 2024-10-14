@@ -3,15 +3,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const twilio = require('twilio');
 const sgMail = require('@sendgrid/mail');
 require('dotenv').config();
 const verifyAppleToken = require('../authentication/verifyApple');
 const verifyToken = require('../authentication/verifyToken');
-
-
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const router = express.Router();
