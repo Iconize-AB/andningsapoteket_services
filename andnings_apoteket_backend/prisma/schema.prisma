@@ -26,6 +26,7 @@ model User {
   password                   String
   email                      String    @unique
   language                   String?
+  helpOptions                String[]
   phoneNumber                String?
   verificationCode           String?
   userCategories             UserCategory[]

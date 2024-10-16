@@ -1,12 +1,12 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const sgMail = require('@sendgrid/mail');
-require('dotenv').config();
-const verifyAppleToken = require('../authentication/verifyApple');
-const verifyToken = require('../authentication/verifyToken');
+const sgMail = require("@sendgrid/mail");
+require("dotenv").config();
+const verifyAppleToken = require("../authentication/verifyApple");
+const verifyToken = require("../authentication/verifyToken");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const router = express.Router();
@@ -36,22 +36,25 @@ router.post("/signin", async (req, res) => {
 
 router.post("/request-reset", async (req, res) => {
   const { email } = req.body;
-  console.log('email', email);
+  console.log("email", email);
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+    console.log("user", user);
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
 
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
-    
+
     // Set expiration time to 5 minutes from now
     const expirationTime = new Date();
     expirationTime.setMinutes(expirationTime.getMinutes() + 5);
-    console.log('expirationTime', expirationTime);
+    console.log("expirationTime", expirationTime);
 
     await prisma.user.update({
-      where: { email: email.toString() },
+      where: { email: email.toLowerCase() },
       data: {
         resetCode: verificationCode.toString(),
         resetCodeExpiry: expirationTime.toISOString(), // Ensure date is stored in ISO format
@@ -59,9 +62,9 @@ router.post("/request-reset", async (req, res) => {
     });
 
     const msg = {
-      to: email,  // Use the correct email variable here
-      from: 'support@iconize-earth.com',
-      subject: 'Verify your email for Andningsapoteket',
+      to: email, // Use the correct email variable here
+      from: "support@iconize-earth.com",
+      subject: "Verify your email for Andningsapoteket",
       text: `Your verification code is: ${verificationCode}`,
       html: `<strong>Your verification code is: ${verificationCode}</strong>`,
     };
@@ -76,7 +79,7 @@ router.post("/request-reset", async (req, res) => {
 
 router.post("/set-new-password", async (req, res) => {
   const { email, newPassword } = req.body;
-  console.log('email', email, newPassword);
+  console.log("email", email, newPassword);
   if (!newPassword || newPassword.length < 6) {
     return res
       .status(400)
@@ -132,18 +135,17 @@ router.post("/verify-reset-code", async (req, res) => {
   }
 });
 
-
 router.post("/verify-code", async (req, res) => {
   const { email, code } = req.body;
 
-  console.log('email', email, code);
+  console.log("email", email, code);
 
   try {
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
 
-    console.log('user', user);
+    console.log("user", user);
 
     if (!user) return res.status(404).json({ error: "User not found." });
 
@@ -165,12 +167,12 @@ router.post("/verify-code", async (req, res) => {
 
     res.status(200).json({ message: "Login successful.", token });
   } catch (error) {
-    console.error('Verification error:', error);
+    console.error("Verification error:", error);
     res.status(500).json({ error: "Verification failed." });
   }
 });
 
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   const { email, password, appleIdToken } = req.body;
 
   try {
@@ -178,26 +180,26 @@ router.post('/register', async (req, res) => {
 
     if (appleIdToken) {
       const applePayload = await verifyAppleToken(appleIdToken);
-      console.log('applePayload', applePayload);
+      console.log("applePayload", applePayload);
       if (!applePayload || !applePayload.email) {
-        return res.status(400).json({ error: 'Invalid Apple ID token.' });
+        return res.status(400).json({ error: "Invalid Apple ID token." });
       }
       emailFromApple = applePayload.email;
     }
 
     const userEmail = appleIdToken ? emailFromApple : email.toLowerCase();
 
-    console.log('appleIdToken', appleIdToken);
+    console.log("appleIdToken", appleIdToken);
 
     // Check if the email already exists in the database
     const existingUser = await prisma.user.findUnique({
       where: { email: userEmail },
     });
 
-    console.log('existingUser', existingUser);
+    console.log("existingUser", existingUser);
 
     if (existingUser) {
-      return res.status(400).json({ error: 'Email already exists.' });
+      return res.status(400).json({ error: "Email already exists." });
     }
 
     // If not Apple sign-in, hash the password before storing it in the database
@@ -228,10 +230,14 @@ router.post('/register', async (req, res) => {
     });
 
     // Generate a JWT token for the user
-    const token = jwt.sign({ userId: user.id }, 'secret', { expiresIn: '180d' });
+    const token = jwt.sign({ userId: user.id }, "secret", {
+      expiresIn: "180d",
+    });
 
     // Generate a random verification code (6-digit)
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
 
     // Update the user with the verification code
     await prisma.user.update({
@@ -242,185 +248,132 @@ router.post('/register', async (req, res) => {
     // Send the verification code via email using SendGrid
     const msg = {
       to: userEmail,
-      from: 'support@iconize-earth.com',
-      subject: 'Verify your email for Andningsapoteket',
+      from: "support@iconize-earth.com",
+      subject: "Verify your email for Andningsapoteket",
       text: `Your verification code is: ${verificationCode}`,
       html: `<strong>Your verification code is: ${verificationCode}</strong>`,
     };
 
     await sgMail.send(msg);
 
-    return res.status(200).json({ message: 'Verification email sent.', token });
+    return res.status(200).json({ message: "Verification email sent.", token });
   } catch (error) {
-    console.error('Registration error:', error);
-    return res.status(500).json({ error: 'User could not be created.' });
+    console.error("Registration error:", error);
+    return res.status(500).json({ error: "User could not be created." });
   }
 });
 
 router.delete("/delete-user", verifyToken, async (req, res) => {
   const { userId } = req.body;
-  console.log('userId', userId);
-  
+  console.log("userId", userId);
+
   try {
     const userIdParsed = parseInt(userId);
 
-    await prisma.batch.deleteMany({
-      where: {
-        OR: [
-          { followedUserId: userIdParsed },
-          { followingUserId: userIdParsed }
-        ]
-      },
-    });
-    console.log("Deleted related batches");
-
-    try {
-      await prisma.favoriteSession.deleteMany({
-        where: { userId: userIdParsed },
+    await prisma.$transaction(async (prisma) => {
+      // Delete related records first
+      await prisma.sessionLike.deleteMany({ where: { userId: userIdParsed } });
+      await prisma.batch.deleteMany({
+        where: {
+          OR: [
+            { followedUserId: userIdParsed },
+            { followingUserId: userIdParsed },
+          ],
+        },
       });
-      console.log("Deleted favoriteSession");
-    } catch (error) {
-      console.log("No favorite sessions to delete or error:", error);
-    }
-
-    try {
-      await prisma.userCategories.deleteMany({
-        where: { userId: userIdParsed },
-      });
-      console.log("Deleted userCategories");
-    } catch (error) {
-      console.log("No user categories to delete or error:", error);
-    }
-
-    try {
       await prisma.savedSessionList.deleteMany({
         where: { userId: userIdParsed },
       });
-      console.log("Deleted savedSessionList");
-    } catch (error) {
-      console.log("No saved session lists to delete or error:", error);
-    }
-
-    try {
-      await prisma.diaryEntry.deleteMany({
-        where: { userId: userIdParsed },
-      });
-      console.log("Deleted diaryEntry");
-    } catch (error) {
-      console.log("No diary entries to delete or error:", error);
-    }
-
-    try {
+      await prisma.diaryEntry.deleteMany({ where: { userId: userIdParsed } });
       await prisma.userSessionRating.deleteMany({
         where: { userId: userIdParsed },
       });
-      console.log("Deleted userSessionRating");
-    } catch (error) {
-      console.log("No session ratings to delete or error:", error);
-    }
-
-    try {
       await prisma.sessionComment.deleteMany({
         where: { userId: userIdParsed },
       });
-      console.log("Deleted sessionComment");
-    } catch (error) {
-      console.log("No session comments to delete or error:", error);
-    }
-
-    try {
-      await prisma.breathworkList.deleteMany({
-        where: { userId: userIdParsed },
-      });
-      console.log("Deleted breathworkList");
-    } catch (error) {
-      console.log("No breathwork lists to delete or error:", error);
-    }
-
-    try {
       await prisma.eventTracking.deleteMany({
         where: { userId: userIdParsed },
       });
-      console.log("Deleted eventTracking");
-    } catch (error) {
-      console.log("No event tracking to delete or error:", error);
-    }
+      await prisma.sessionWatch.deleteMany({ where: { userId: userIdParsed } });
 
-    // Delete records from sessionWatch table
-    try {
-      await prisma.sessionWatch.deleteMany({
-        where: { userId: userIdParsed },
-      });
-      console.log("Deleted sessionWatch records");
-    } catch (error) {
-      console.log("No session watch records to delete or error:", error);
-    }
+      // Delete favoriteSession and userCategories if they exist
+      if (prisma.favoriteSession) {
+        await prisma.favoriteSession.deleteMany({
+          where: { userId: userIdParsed },
+        });
+      }
+      if (prisma.userCategories) {
+        await prisma.userCategories.deleteMany({
+          where: { userId: userIdParsed },
+        });
+      }
 
-    try {
-      await prisma.libraryForSession.deleteMany({
+      // Delete BreathworkListsForSession records
+      await prisma.breathworkListsForSession.deleteMany({
         where: {
-          library: {
+          trainingList: {
             userId: userIdParsed,
           },
         },
       });
-      console.log("Deleted libraryForSession records");
-    } catch (error) {
-      console.log("No libraryForSession records to delete or error:", error);
-    }
 
-    // Delete records from Library table
-    try {
-      await prisma.library.delete({
-        where: {
-          userId: userIdParsed,
-        },
-      });
-      console.log("Deleted Library records");
-    } catch (error) {
-      console.log("No Library records to delete or error:", error);
-    }
-
-    // Delete the user profile
-    try {
-      await prisma.profile.delete({
+      // Delete BreathworkList
+      await prisma.breathworkList.deleteMany({
         where: { userId: userIdParsed },
       });
-      console.log("Deleted user profile");
-    } catch (error) {
-      if (error.code === 'P2025') {
-        console.log("Profile not found, skipping deletion");
-      } else {
-        console.log("Error deleting profile:", error);
-      }
-    }
 
-    // Finally delete the user
-    const deletedUser = await prisma.user.delete({
-      where: { id: userIdParsed },
+      // Delete Library and related records
+      const library = await prisma.library.findUnique({
+        where: { userId: userIdParsed },
+      });
+
+      if (library) {
+        await prisma.libraryForSession.deleteMany({
+          where: { libraryId: library.id },
+        });
+        await prisma.library.delete({
+          where: { id: library.id },
+        });
+      }
+
+      // Delete user profile
+      try {
+        await prisma.profile.delete({
+          where: { userId: userIdParsed },
+        });
+      } catch (error) {
+        if (error.code !== "P2025") {
+          throw error;
+        }
+      }
+
+      // Finally delete the user
+      await prisma.user.delete({
+        where: { id: userIdParsed },
+      });
     });
 
-    if (!deletedUser) {
-      return res.status(404).json({ error: "User not found." });
-    }
-
-    res.status(200).json({ message: "User and all related data deleted successfully." });
+    res
+      .status(200)
+      .json({ message: "User and all related data deleted successfully." });
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ error: "Failed to delete user." });
   }
 });
 
-router.get('/all', verifyToken, async (req, res) => {
-  try {    
+router.get("/all", verifyToken, async (req, res) => {
+  try {
     // Fetch the full user details from the database
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { role: true }
+      select: { role: true },
     });
 
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+    if (!user || user.role !== "ADMIN") {
+      return res
+        .status(403)
+        .json({ error: "Access denied. Admin privileges required." });
     }
 
     const users = await prisma.user.findMany({
@@ -441,14 +394,60 @@ router.get('/all', verifyToken, async (req, res) => {
     });
 
     res.status(200).json({
-      message: 'Users fetched successfully',
+      message: "Users fetched successfully",
       users: users,
       total: users.length,
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users.' });
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Failed to fetch users." });
   }
 });
+
+router.post("/update-help-options", verifyToken, async (req, res) => {
+  const { userId } = req.user;
+  const { selectedOptions } = req.body;
+
+  try {
+    if (!Array.isArray(selectedOptions) || selectedOptions.length > 3 || selectedOptions.length === 0) {
+      return res.status(400).json({ error: "Please provide 1-3 valid options." });
+    }
+
+    // Update user's help options
+    await prisma.user.update({
+      where: { id: userId },
+      data: { helpOptions: selectedOptions },
+    });
+
+    // Generate content based on selected options
+    const content = generateContentForOptions(selectedOptions);
+
+    res.status(200).json({ 
+      message: "Help options updated successfully.", 
+      content: content 
+    });
+  } catch (error) {
+    console.error("Error updating help options:", error);
+    res.status(500).json({ error: "Failed to update help options." });
+  }
+});
+
+function generateContentForOptions(options) {
+  const contentMap = {
+    'Minska ångest': "Andningsövningar kan hjälpa dig att minska ångest genom att aktivera ditt parasympatiska nervsystem, vilket lugnar kroppen och sinnet.",
+    'Minska stress': "Regelbunden andningsträning kan sänka stressnivåerna i kroppen genom att minska produktionen av stresshormoner som kortisol.",
+    'Slappna av': "Djupandning är en effektiv teknik för att slappna av, då det sänker hjärtfrekvensen och blodtrycket.",
+    'Sluta övertänka': "Fokuserad andning kan hjälpa dig att bryta cykeln av överdrivet tänkande genom att förankra dig i nuet.",
+    'Hantera ilska': "Andningsövningar kan ge dig tid att lugna ner dig och tänka klarare när du känner dig arg, vilket förbättrar din emotionella kontroll.",
+    'Bli fokuserad': "Kontrollerad andning ökar syretillförseln till hjärnan, vilket kan förbättra din koncentration och mentala skärpa.",
+    'Hantera oro': "Andningstekniker kan hjälpa dig att hantera oro genom att skifta ditt fokus från oroande tankar till din andning.",
+    'Bli piggare': "Vissa andningsövningar kan öka din energinivå genom att stimulera ditt sympatiska nervsystem och förbättra syresättningen i kroppen."
+  };
+
+  return options.map(option => ({
+    option: option,
+    content: contentMap[option]
+  }));
+}
 
 module.exports = router;
