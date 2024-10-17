@@ -27,7 +27,6 @@ router.post("/add-video", verifyToken, async (req, res) => {
           userId: userId,
         },
       });
-      console.log("New library created for user:", library);
     }
 
     // Add the session to the user's library
@@ -142,9 +141,6 @@ router.delete("/delete", verifyToken, async (req, res) => {
         .status(404)
         .json({ error: "Library not found for this user." });
     }
-
-    // Log the current sessions in the library for debugging
-    console.log("User's library sessions:", library.sessions);
 
     // Perform the delete operation
     const deleteSessions = await prisma.libraryForSession.deleteMany({

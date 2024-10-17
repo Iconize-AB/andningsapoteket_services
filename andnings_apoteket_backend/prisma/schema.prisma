@@ -32,7 +32,7 @@ model User {
   userCategories             UserCategory[]
   batchesFollowed            Batch[]   @relation("FollowedUsers")
   batchesFollowing           Batch[]   @relation("FollowingUsers")
-  viewedOnBoarding           String[]
+  viewedOnBoarding           String?
   profileId                  Int?      // Optional profileId
   profile                    Profile?  // Optional relation
   username                   String?   @unique

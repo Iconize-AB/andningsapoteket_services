@@ -44,6 +44,7 @@ router.get("/fetch-profile", verifyToken, async (req, res) => {
       lastActive: updatedUser.lastActive,
       subscriptionType: updatedUser.subscriptionType,
       language: updatedUser.language,
+      viewedOnBoarding: updatedUser.viewedOnBoarding,
       phoneNumber: updatedUser.phoneNumber,
       role: updatedUser.role,
       userCategories: updatedUser.userCategories,

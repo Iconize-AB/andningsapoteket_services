@@ -175,6 +175,8 @@ router.post("/verify-code", async (req, res) => {
 router.post("/register", async (req, res) => {
   const { email, password, appleIdToken } = req.body;
 
+  console.log('email, password', email, password);
+
   try {
     let emailFromApple;
 
@@ -449,5 +451,33 @@ function generateContentForOptions(options) {
     content: contentMap[option]
   }));
 }
+
+router.post("/update-onboarding-step", verifyToken, async (req, res) => {
+  const { userId } = req.user;
+  const { step } = req.body;
+
+  console.log('step', step);
+
+  if (!step || typeof step !== 'string') {
+    return res.status(400).json({ error: "Invalid step provided." });
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { viewedOnBoarding: step },
+    });
+
+    console.log('updatedUser', updatedUser);
+
+    res.status(200).json({
+      message: "Onboarding step updated successfully.",
+      currentStep: updatedUser.viewedOnBoarding
+    });
+  } catch (error) {
+    console.error("Error updating onboarding step:", error);
+    res.status(500).json({ error: "Failed to update onboarding step." });
+  }
+});
 
 module.exports = router;
