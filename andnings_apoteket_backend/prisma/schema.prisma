@@ -144,6 +144,7 @@ model Session {
   ratings     UserSessionRating[]  // Updated
   lists       BreathworkListsForSession[]  // Updated
   libraries   LibraryForSession[]  // Updated
+  activated   Boolean   @default(true)
   categories  Json      // Array of strings representing what the session is good for
   watches     SessionWatch[]  // Updated
   userLikes   SessionLike[]  // Updated
