@@ -20,12 +20,15 @@ model User {
   fullName                   String?   // Optional field
   active                     Boolean
   subscriptionType           String?
+  subscriptionEndDate        DateTime?
   pushToken                  String?
   resetCode                  String?
   resetCodeExpiry            String?
   password                   String
   email                      String    @unique
   language                   String?
+  inviteCode                 String?
+  inviteCodeUses             Int       @default(0)
   helpOptions                String[]
   phoneNumber                String?
   verificationCode           String?
