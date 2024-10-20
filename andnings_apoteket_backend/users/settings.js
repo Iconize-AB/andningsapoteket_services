@@ -8,6 +8,8 @@ router.put("/user/toggle-push-notification", verifyToken, async (req, res) => {
   const { pushNotification } = req.body;
   const userId = req.user.userId;
 
+  console.log('pushNotification', pushNotification);
+
   try {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -53,8 +55,10 @@ router.put("/user/change-language-setting", verifyToken, async (req, res) => {
 });
 
 router.put("/user/toggle-email-notification", verifyToken, async (req, res) => {
-  const { emailNotifications } = req.body;
+  const { emailNotification } = req.body;
   const userId = req.user.userId;
+
+  console.log('emailNotification', emailNotification);
 
   try {
     const updatedUser = await prisma.user.update({
@@ -62,7 +66,7 @@ router.put("/user/toggle-email-notification", verifyToken, async (req, res) => {
       data: {
         profile: {
           update: {
-            emailNotifications: emailNotifications,
+            emailNotifications: emailNotification,
           },
         },
       },
