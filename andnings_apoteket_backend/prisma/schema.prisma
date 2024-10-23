@@ -43,14 +43,16 @@ model User {
   createdAt                  DateTime  @default(now())
   savedSessionLists          SavedSessionList[]
   diaryEntries               DiaryEntry[]
-  userSessionRatings         UserSessionRating[] // Updated
-  sessionComments            SessionComment[] // Updated
+  userSessionRatings         UserSessionRating[]
+  sessionComments            SessionComment[]
   breathworkLists            BreathworkList[]
-  eventTracking              EventTracking[]
-  sessionWatches             SessionWatch[] // Updated
+  sessionWatches             SessionWatch[]
   libraries                  Library[]
   lastActive                 DateTime?  @updatedAt
-  sessionLikes               SessionLike[] // Updated
+  sessionLikes               SessionLike[]
+  sessionStartEvents         SessionStartEvent[]
+  sessionEndEvents           SessionEndEvent[]
+  deviceType                 String?   // Add this line
 }
 
 model Profile {
@@ -92,45 +94,6 @@ model SavedSessionList {
   user      User     @relation(fields: [userId], references: [id])
 }
 
-model EventTracking {
-  id                    Int       @id @default(autoincrement())
-  userId                Int
-  deviceId              String
-  sessionId             String
-  timestamp             DateTime
-  deviceModel           String
-  location              String?
-  screenId              String
-  screenName            String
-  appVersion            String
-  playerAction          String?
-  contentId             String?
-  contentName           String?
-  contentType           String?
-  contentCategory       String?
-  listenedPercentage    String?
-  audioSessionId        String?
-  audioSessionTitle     String?
-  audioSessionType      String?
-  audioSessionPauseTime String?
-  previousScreen        String?
-  buttonName            String?
-  buttonId              String?
-  formId                String?
-  formName              String?
-  searchQuery           String?
-  resultsCount          Int?
-  reasonForExit         String?
-  source                String?
-  loginMethod           String?
-  subscriptionId        String?
-  planType              String?
-  price                 Float?
-  currency              String?
-  fieldsUpdated         String[]
-  createdAt             DateTime  @default(now())
-  user                  User      @relation(fields: [userId], references: [id])
-}
 
 model Session {
   id          Int       @id @default(autoincrement())
@@ -152,6 +115,8 @@ model Session {
   watches     SessionWatch[]  // Updated
   userLikes   SessionLike[]  // Updated
   highlighted Boolean   @default(false)  // Add this line
+  startEvents SessionStartEvent[]
+  endEvents   SessionEndEvent[]
 }
 
 model SessionLike {
@@ -263,4 +228,24 @@ model ChallengeSession {
   challengeId Int
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+}
+
+model SessionStartEvent {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  sessionId Int
+  startTime DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  session   Session  @relation(fields: [sessionId], references: [id])
+}
+
+model SessionEndEvent {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  sessionId       Int
+  startEventId    Int
+  endTime         DateTime @default(now())
+  durationWatched Float    // Duration watched in minutes
+  user            User     @relation(fields: [userId], references: [id])
+  session         Session  @relation(fields: [sessionId], references: [id])
 }

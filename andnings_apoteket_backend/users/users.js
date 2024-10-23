@@ -13,7 +13,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const router = express.Router();
 
 router.post("/signin", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, deviceType } = req.body;
 
   try {
     const user = await prisma.user.findUnique({
@@ -25,12 +25,19 @@ router.post("/signin", async (req, res) => {
     if (!isPasswordValid)
       return res.status(400).json({ error: "Invalid password." });
 
+    // Update the user's device type
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { deviceType: deviceType },
+    });
+
     const token = jwt.sign({ userId: user.id }, "secret", {
       expiresIn: "180d",
     });
 
     res.status(200).json({ token });
   } catch (error) {
+    console.error("Signin error:", error);
     res.status(500).json({ error: "Authentication failed." });
   }
 });
@@ -294,7 +301,10 @@ router.delete("/delete-user", verifyToken, async (req, res) => {
       await prisma.sessionComment.deleteMany({
         where: { userId: userIdParsed },
       });
-      await prisma.eventTracking.deleteMany({
+      await prisma.sessionEndEvents.deleteMany({
+        where: { userId: userIdParsed },
+      });
+      await prisma.sessionStartEvents.deleteMany({
         where: { userId: userIdParsed },
       });
       await prisma.sessionWatch.deleteMany({ where: { userId: userIdParsed } });
