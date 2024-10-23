@@ -7,6 +7,7 @@ const sgMail = require("@sendgrid/mail");
 require("dotenv").config();
 const verifyAppleToken = require("../authentication/verifyApple");
 const verifyToken = require("../authentication/verifyToken");
+const { sendPushNotification } = require('../utils/pushNotifications');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const router = express.Router();
@@ -482,6 +483,41 @@ router.post("/update-onboarding-step", verifyToken, async (req, res) => {
   } catch (error) {
     console.error("Error updating onboarding step:", error);
     res.status(500).json({ error: "Failed to update onboarding step." });
+  }
+});
+
+router.post("/reminder-onboarding", verifyToken, async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    // Send push notification if the user has a push token
+    if (user.pushToken) {
+      try {
+        await sendPushNotification(
+          user.pushToken,
+          "Complete Your Onboarding",
+          "Don't forget to complete your onboarding process for Andningsapoteket!",
+          { type: "onboarding_reminder" }
+        );
+        res.status(200).json({ message: "Onboarding reminder sent successfully." });
+      } catch (error) {
+        console.error("Error sending push notification:", error);
+        res.status(500).json({ error: "Failed to send onboarding reminder." });
+      }
+    } else {
+      res.status(400).json({ error: "User doesn't have a push token." });
+    }
+  } catch (error) {
+    console.error("Error sending onboarding reminder:", error);
+    res.status(500).json({ error: "Failed to send onboarding reminder." });
   }
 });
 

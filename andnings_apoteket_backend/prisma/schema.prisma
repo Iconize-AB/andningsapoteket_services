@@ -133,7 +133,7 @@ model EventTracking {
 }
 
 model Session {
-  id          Int       @id @default(autoincrement())  // Updated
+  id          Int       @id @default(autoincrement())
   category    String
   title       String
   description String
@@ -151,6 +151,7 @@ model Session {
   categories  Json      // Array of strings representing what the session is good for
   watches     SessionWatch[]  // Updated
   userLikes   SessionLike[]  // Updated
+  highlighted Boolean   @default(false)  // Add this line
 }
 
 model SessionLike {
