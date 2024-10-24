@@ -13,7 +13,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const router = express.Router();
 
 router.post("/signin", async (req, res) => {
-  const { email, password, deviceType } = req.body;
+  const { email, password } = req.body;
 
   try {
     const user = await prisma.user.findUnique({
@@ -25,19 +25,12 @@ router.post("/signin", async (req, res) => {
     if (!isPasswordValid)
       return res.status(400).json({ error: "Invalid password." });
 
-    // Update the user's device type
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { deviceType: deviceType },
-    });
-
     const token = jwt.sign({ userId: user.id }, "secret", {
       expiresIn: "180d",
     });
 
     res.status(200).json({ token });
   } catch (error) {
-    console.error("Signin error:", error);
     res.status(500).json({ error: "Authentication failed." });
   }
 });
@@ -437,8 +430,18 @@ router.post("/update-help-options", verifyToken, async (req, res) => {
       data: { helpOptions: selectedOptions },
     });
 
-    // Generate content based on selected options
-    const content = generateContentForOptions(selectedOptions);
+    // Fetch content for selected options
+    const content = await prisma.helpOptionContent.findMany({
+      where: {
+        option: {
+          in: selectedOptions
+        }
+      },
+      select: {
+        option: true,
+        content: true
+      }
+    });
 
     res.status(200).json({ 
       message: "Help options updated successfully.", 
@@ -449,24 +452,6 @@ router.post("/update-help-options", verifyToken, async (req, res) => {
     res.status(500).json({ error: "Failed to update help options." });
   }
 });
-
-function generateContentForOptions(options) {
-  const contentMap = {
-    'Minska ångest': "Andningsövningar kan hjälpa dig att minska ångest genom att aktivera ditt parasympatiska nervsystem, vilket lugnar kroppen och sinnet.",
-    'Minska stress': "Regelbunden andningsträning kan sänka stressnivåerna i kroppen genom att minska produktionen av stresshormoner som kortisol.",
-    'Slappna av': "Djupandning är en effektiv teknik för att slappna av, då det sänker hjärtfrekvensen och blodtrycket.",
-    'Sluta övertänka': "Fokuserad andning kan hjälpa dig att bryta cykeln av överdrivet tänkande genom att förankra dig i nuet.",
-    'Hantera ilska': "Andningsövningar kan ge dig tid att lugna ner dig och tänka klarare när du känner dig arg, vilket förbättrar din emotionella kontroll.",
-    'Bli fokuserad': "Kontrollerad andning ökar syretillförseln till hjärnan, vilket kan förbättra din koncentration och mentala skärpa.",
-    'Hantera oro': "Andningstekniker kan hjälpa dig att hantera oro genom att skifta ditt fokus från oroande tankar till din andning.",
-    'Bli piggare': "Vissa andningsövningar kan öka din energinivå genom att stimulera ditt sympatiska nervsystem och förbättra syresättningen i kroppen."
-  };
-
-  return options.map(option => ({
-    option: option,
-    content: contentMap[option]
-  }));
-}
 
 router.post("/update-onboarding-step", verifyToken, async (req, res) => {
   const { userId } = req.user;

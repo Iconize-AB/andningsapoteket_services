@@ -52,7 +52,8 @@ model User {
   sessionLikes               SessionLike[]
   sessionStartEvents         SessionStartEvent[]
   sessionEndEvents           SessionEndEvent[]
-  deviceType                 String?   // Add this line
+  eventTracking              EventTracking[]
+  deviceType                 String?
 }
 
 model Profile {
@@ -100,51 +101,52 @@ model Session {
   category    String
   title       String
   description String
-  likes       Int       @default(0)  // Keep this to count total likes
+  likes       Int       @default(0)
   color       String?
   url         String
   duration    Float?
   imageUrl    String?
   createdAt   DateTime  @default(now())
-  comments    SessionComment[]  // Updated
-  ratings     UserSessionRating[]  // Updated
-  lists       BreathworkListsForSession[]  // Updated
-  libraries   LibraryForSession[]  // Updated
+  comments    SessionComment[]
+  ratings     UserSessionRating[]
+  lists       BreathworkListsForSession[]
+  libraries   LibraryForSession[]
   activated   Boolean   @default(true)
   categories  Json      // Array of strings representing what the session is good for
-  watches     SessionWatch[]  // Updated
-  userLikes   SessionLike[]  // Updated
-  highlighted Boolean   @default(false)  // Add this line
+  watches     SessionWatch[]
+  userLikes   SessionLike[]
+  highlighted Boolean   @default(false)
   startEvents SessionStartEvent[]
   endEvents   SessionEndEvent[]
+  eventTracking EventTracking[]
 }
 
 model SessionLike {
-  id        Int    @id @default(autoincrement())  // Updated
+  id        Int    @id @default(autoincrement())
   sessionId Int
   userId    Int
   createdAt DateTime @default(now())
-  session   Session   @relation(fields: [sessionId], references: [id])  // Updated
+  session   Session   @relation(fields: [sessionId], references: [id])
   user      User    @relation(fields: [userId], references: [id])
-  @@unique([sessionId, userId])  // Ensure a user can like a session only once
+  @@unique([sessionId, userId])
 }
 
 model SessionWatch {
-  id        Int      @id @default(autoincrement())  // Updated
+  id        Int      @id @default(autoincrement())
   userId    Int
   sessionId Int
   watchedAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])  // User relation
-  session   Session  @relation(fields: [sessionId], references: [id])  // Updated
+  user      User     @relation(fields: [userId], references: [id])
+  session   Session  @relation(fields: [sessionId], references: [id])
 }
 
 model SessionComment {
-  id        Int      @id @default(autoincrement())  // Updated
+  id        Int      @id @default(autoincrement())
   sessionId Int
   userId    Int
   comment   String
   createdAt DateTime  @default(now())
-  session   Session  @relation(fields: [sessionId], references: [id])  // Updated
+  session   Session  @relation(fields: [sessionId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
 }
 
@@ -155,16 +157,16 @@ model BreathworkList {
   runSessionCount Int      @default(0)
   createdAt       DateTime  @default(now())
   user            User      @relation(fields: [userId], references: [id])
-  sessions        BreathworkListsForSession[]  // Updated
+  sessions        BreathworkListsForSession[]
 }
 
 model BreathworkListsForSession {
-  id              Int      @id @default(autoincrement())  // Updated
+  id              Int      @id @default(autoincrement())
   trainingListId  Int
   sessionId       Int
   createdAt       DateTime  @default(now())
   trainingList    BreathworkList @relation(fields: [trainingListId], references: [id])
-  session         Session   @relation(fields: [sessionId], references: [id])  // Updated
+  session         Session   @relation(fields: [sessionId], references: [id])
 }
 
 model Library {
@@ -172,16 +174,16 @@ model Library {
   userId      Int       @unique  // Each user has one library
   createdAt   DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id])
-  sessions    LibraryForSession[]  // Updated
+  sessions    LibraryForSession[]
 }
 
-model LibraryForSession {  // Updated
+model LibraryForSession {
   id          Int       @id @default(autoincrement())
   libraryId   Int
   sessionId   Int
   createdAt   DateTime  @default(now())
   library     Library   @relation(fields: [libraryId], references: [id])
-  session     Session   @relation(fields: [sessionId], references: [id])  // Updated
+  session     Session   @relation(fields: [sessionId], references: [id])
 }
 
 model DiaryEntry {
@@ -195,7 +197,7 @@ model DiaryEntry {
   user      User     @relation(fields: [userId], references: [id])
 }
 
-model UserSessionRating {  // Updated
+model UserSessionRating {
   id            Int      @id @default(autoincrement())
   userId        Int
   sessionId     Int
@@ -203,7 +205,7 @@ model UserSessionRating {  // Updated
   feelingAfter  Int
   createdAt     DateTime @default(now())
   user          User     @relation(fields: [userId], references: [id])
-  session       Session   @relation(fields: [sessionId], references: [id])  // Updated
+  session       Session   @relation(fields: [sessionId], references: [id])
 }
 
 model SixDayChallenge {
@@ -213,6 +215,22 @@ model SixDayChallenge {
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   sessions    ChallengeSession[]
+}
+
+model EventTracking {
+  id                    Int       @id @default(autoincrement())
+  userId                Int
+  eventType             String    // e.g., "session_start", "session_pause", "feature_interaction"
+  timestamp             DateTime  @default(now())
+  sessionId             Int?
+  challengeId           Int?
+  breathworkListId      Int?
+  duration              Float?
+  actionTaken           String?   // e.g., "pause", "resume", "skip", "add_to_library"
+  featureInteracted     String?   // e.g., "library", "breathwork_list", "diary"
+  createdAt             DateTime  @default(now())
+  user                  User      @relation(fields: [userId], references: [id])
+  session               Session?  @relation(fields: [sessionId], references: [id])
 }
 
 model ChallengeSession {
@@ -248,4 +266,10 @@ model SessionEndEvent {
   durationWatched Float    // Duration watched in minutes
   user            User     @relation(fields: [userId], references: [id])
   session         Session  @relation(fields: [sessionId], references: [id])
+}
+
+model HelpOptionContent {
+  id      Int    @id @default(autoincrement())
+  option  String @unique
+  content String @db.Text
 }
